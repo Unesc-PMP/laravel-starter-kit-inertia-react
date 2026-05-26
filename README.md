@@ -32,6 +32,7 @@ O PHP moderno evoluiu para uma linguagem madura e type-safe, mas muitos projetos
 - **Defaults Laravel melhores**: graças ao **[Essentials](https://github.com/nunomaduro/essentials)** — models estritos, eager loading automático, datas imutáveis e mais
 - **Diretrizes de IA**: guidelines integradas para ajudar a manter qualidade e consistência
 - **Suíte de testes completa**: mais de 150 testes com 100% de cobertura de código usando Pest
+- **[Laravel PAO](https://github.com/laravel/pao)**: saída JSON compacta para Agents em Pest, PHPStan, Rector e Artisan — sem alterar a experiência no terminal humano
 
 Não é só mais um boilerplate Laravel — é a ideia de que aplicações PHP podem e devem ser construídas com o mesmo rigor de linguagens fortemente tipadas como Rust ou TypeScript.
 
@@ -118,11 +119,143 @@ Execute os scripts **dentro do Sail** com `sail composer …` ou `sail bun …` 
 - `sail composer test:type-coverage` — cobertura de tipos (Pest), mínimo 100%
 - `sail composer test:types` — PHPStan (nível 9) e checagem TypeScript
 - `sail composer test:unit` — Pest com cobertura de código 100%
-- `sail composer test` — suíte completa (tipos, testes, lint, análise estática)
+- `sail composer test` — suíte completa (tipos, testes, lint, análise estática); com Agent ativo, a saída de cada etapa passa pelo PAO (ver abaixo)
 
 ### Manutenção
 
 - `sail composer update:requirements` — atualiza dependências PHP e Bun
+
+### Laravel PAO (saída otimizada para Agent)
+
+O projeto inclui **[Laravel PAO](https://github.com/laravel/pao)** (`laravel/pao` em `require-dev`). O PAO (*PHP Agent Output*) detecta quando Pest, PHPUnit, Paratest, PHPStan ou Rector rodam em um ambiente de **Agent de IA** (Cursor, Claude Code, GitHub Copilot, Gemini CLI, Devin, etc.) e substitui a saída verbosa por **JSON compacto e estável em tamanho**. No terminal humano — ou no CI, onde não há variáveis de Agent — a saída colorida e formatada **não muda**.
+
+**Zero configuração:** após `sail composer install`, o pacote é carregado automaticamente (autoload do Composer, plugin Pest e service provider Laravel para comandos `artisan`). Não há `config/pao.php` para publicar.
+
+#### Ferramentas e scripts afetados
+
+| Ferramenta | Ativado via | Scripts do projeto |
+|------------|-------------|-------------------|
+| Pest | `pest`, `vendor/bin/pest` | `test:type-coverage`, `test:unit`, `composer test` |
+| PHPStan | `phpstan`, `vendor/bin/phpstan` | `test:types` |
+| Rector | `rector`, `vendor/bin/rector` | `lint`, `test:lint` |
+| Laravel Pint | `pint` (saída JSON quando Agent) | `lint`, `test:lint` |
+| Artisan | qualquer comando no console | ex.: `sail artisan about`, `migrate:status` (menos ruído visual) |
+
+#### Detecção de Agent
+
+O PAO usa [laravel/agent-detector](https://github.com/laravel/agent-detector). Exemplos de sinais reconhecidos:
+
+- **Cursor:** `CURSOR_AGENT`
+- **Claude Code:** `CLAUDE_CODE`, `CLAUDECODE`
+- **Copilot:** `COPILOT_MODEL`, `COPILOT_CLI`, …
+- **Genérico:** `AI_AGENT`
+
+Lista completa no repositório do pacote.
+
+#### Exemplos de saída
+
+**Testes passando** (Agent ativo):
+
+```json
+{
+  "tool": "pest",
+  "result": "passed",
+  "tests": 164,
+  "passed": 164,
+  "assertions": 485,
+  "duration_ms": 3038
+}
+```
+
+**Testes falhando** — inclui `failures` com arquivo, linha e mensagem:
+
+```json
+{
+  "tool": "pest",
+  "result": "failed",
+  "tests": 10,
+  "passed": 9,
+  "failed": 1,
+  "failures": [
+    {
+      "test": "it validates email",
+      "file": "/var/www/html/tests/Unit/Rules/ValidEmailTest.php",
+      "line": 12,
+      "message": "Failed asserting that false is true."
+    }
+  ],
+  "duration_ms": 420
+}
+```
+
+**PHPStan:**
+
+```json
+{
+  "tool": "phpstan",
+  "result": "passed",
+  "errors": 0
+}
+```
+
+Com `--coverage` ou `--profile`, linhas extras podem aparecer no array `raw` (ainda em JSON).
+
+#### Uso no dia a dia
+
+```bash
+# Suíte completa (cada etapa em JSON se o Agent estiver ativo)
+vendor/bin/sail composer test
+
+# Um arquivo de teste
+vendor/bin/sail artisan test --compact tests/Unit/Rules/ValidEmailTest.php
+
+# Forçar saída humana/verbosa mesmo dentro do Cursor
+PAO_DISABLE=1 vendor/bin/sail composer test
+```
+
+#### Integração com hooks do Cursor
+
+O hook `pint-and-test.sh` executa `sail artisan test` após editar arquivos em `tests/`. Com o Cursor Agent ativo, o PAO reduz o ruído no canal **Hooks** e facilita o Agent interpretar falhas.
+
+#### CI vs desenvolvimento local
+
+O workflow [`.github/workflows/tests.yml`](.github/workflows/tests.yml) roda `composer test` **sem** variáveis de Agent — os logs do GitHub Actions mantêm a saída tradicional das ferramentas. Localmente, abrir o terminal integrado do Cursor costuma ativar o PAO automaticamente.
+
+### Hooks do Cursor (Agent)
+
+O projeto inclui [hooks do Cursor](https://cursor.com/docs/agent/hooks) em `.cursor/hooks.json`, inspirados no harness do [worthly-api](https://github.com/beerandcodeteam/worthly-api/tree/main/.claude/hooks). Eles automatizam qualidade de código enquanto o Agent edita arquivos e executa comandos no terminal.
+
+| Evento | Script | O que faz |
+|--------|--------|-----------|
+| `beforeShellExecution` | `block-non-sail.sh` | Bloqueia `php`, `composer`, `bun`, `npm`, `pest`, `artisan` etc. **fora** do Sail |
+| `afterFileEdit` | `pint-and-test.sh` | Roda Pint no `.php` editado; se for `tests/`, executa Pest com `--filter` (saída JSON via [PAO](https://github.com/laravel/pao) quando o Agent está ativo) |
+| `beforeSubmitPrompt` / `postToolUse` / `stop` | `log-event.sh` | Grava eventos em `.harness/events.jsonl` (gitignored) |
+| `stop` | `notify-n8n.sh` | Webhook opcional (só se `.cursor/.env` estiver configurado) |
+
+**Pré-requisitos no host:** [jq](https://jqlang.org/) instalado e Sail em execução (`sail up -d`) para Pint e testes automáticos. Se o Sail estiver parado, `pint-and-test.sh` apenas avisa e não bloqueia.
+
+**Comandos corretos para o Agent** (o hook rejeita a forma direta no host):
+
+```bash
+# ❌ bloqueado pelo hook
+php artisan test
+composer test
+
+# ✅ permitido
+vendor/bin/sail artisan test --compact
+vendor/bin/sail composer test
+```
+
+**Notificação n8n (opcional):** copie `.cursor/.env.example` para `.cursor/.env` (gitignored) e defina:
+
+```env
+HARNESS_NOTIFY_WEBHOOK_URL=https://seu-n8n.example/webhook/...
+HARNESS_NOTIFY_PASSWORD=
+```
+
+**Depuração:** aba **Hooks** nas configurações do Cursor ou canal de saída **Hooks** — útil para ver bloqueios, Pint e falhas de teste. Reinicie o Cursor após alterar `hooks.json`.
+
+A suíte completa (cobertura 100%, lint, types, browser) continua sendo `sail composer test` (local) ou o workflow de CI — os hooks cobrem feedback rápido no dia a dia, não substituem o pipeline.
 
 ## Licença
 
