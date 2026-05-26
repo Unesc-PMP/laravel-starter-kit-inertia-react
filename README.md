@@ -281,12 +281,19 @@ chmod +x ralph.sh
 ./ralph.sh --engine cursor docs/project-phases.md
 RALPH_VALIDATE=full ./ralph.sh      # validação: sail composer test
 RALPH_VALIDATE=none ./ralph.sh      # sem validação automática entre fases
+./ralph.sh --status                 # ver fases ✓/○ e barra de progresso (sem executar)
+./ralph.sh --quiet                  # spinner + logs (padrão)
+./ralph.sh --verbose                # repete saída do agent no console
+./ralph.sh --yes                    # sem confirmações interativas
 ```
 
-| Variável | Valores | Padrão | Descrição |
+**Saída no console:** o Ralph imprime banner, lista de fases, barra `[████░░]` por fase, passos (`→ Agent`, `→ Validação`), relatório final e caminho dos logs em `.phases/logs/`. No modo `--quiet`, um spinner indica que o agent está rodando; use `tail -f .phases/logs/phase-01-….log` para acompanhar em tempo real.
+
+| Variável / flag | Valores | Padrão | Descrição |
 |----------|---------|--------|-----------|
 | `RALPH_VALIDATE` | `quick`, `full`, `none` | `quick` | `quick` = `sail artisan test --compact`; `full` = `sail composer test` |
-| `RALPH_ENGINE` | (via `--engine`) | `cursor` | `cursor` usa `agent -p --force --trust`; `claude` / `codex` são legado worthly |
+| `RALPH_VERBOSE` | `0`, `1` | `0` | `0` = `--quiet` (spinner); `1` = stream do agent no terminal |
+| `--engine` | `cursor`, `claude`, `codex` | `cursor` | `cursor` usa `agent -p --force --trust` |
 
 Cada **execução** do Ralph corresponde a um cabeçalho `## Phase N — Título` (sub-fases `### Phase N.M` ficam no mesmo prompt, como no worthly). O script grava prompts, logs e progresso em `.phases/` (gitignored) e pode fazer commit por fase se o repositório estiver limpo.
 

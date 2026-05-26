@@ -14,6 +14,9 @@
 #   ./ralph.sh --engine cursor docs/project-phases.md
 #   RALPH_VALIDATE=full ./ralph.sh
 #   RALPH_VALIDATE=none ./ralph.sh
+#   ./ralph.sh --quiet              # só status do Ralph; agent só no .log
+#   ./ralph.sh --verbose            # repete saída do agent no terminal (padrão)
+#   ./ralph.sh --status             # lista fases e progresso sem executar
 #
 # Pré-requisitos:
 #   - Cursor Agent CLI (`agent`) instalado e autenticado (`agent login`)
@@ -26,6 +29,8 @@ set -euo pipefail
 ENGINE="cursor"
 INPUT_FILE=""
 RALPH_VALIDATE="${RALPH_VALIDATE:-quick}"
+RALPH_VERBOSE="${RALPH_VERBOSE:-0}"
+RALPH_YES=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -45,12 +50,30 @@ while [[ $# -gt 0 ]]; do
       RALPH_VALIDATE="${1#*=}"
       shift
       ;;
+    --quiet|-q)
+      RALPH_VERBOSE=0
+      shift
+      ;;
+    --verbose|-v)
+      RALPH_VERBOSE=1
+      shift
+      ;;
+    --yes|-y)
+      RALPH_YES=true
+      shift
+      ;;
+    --status)
+      SHOW_STATUS_ONLY=true
+      shift
+      ;;
     *)
       INPUT_FILE="$1"
       shift
       ;;
   esac
 done
+
+SHOW_STATUS_ONLY="${SHOW_STATUS_ONLY:-false}"
 
 INPUT_FILE="${INPUT_FILE:-docs/project-phases.md}"
 
@@ -78,9 +101,123 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 log()     { echo -e "${BLUE}[$(date '+%H:%M:%S')]${NC} $1"; }
-success() { echo -e "${GREEN}[$(date '+%H:%M:%S')] $1${NC}"; }
-warn()    { echo -e "${YELLOW}[$(date '+%H:%M:%S')] $1${NC}"; }
-fail()    { echo -e "${RED}[$(date '+%H:%M:%S')] $1${NC}"; }
+success() { echo -e "${GREEN}[$(date '+%H:%M:%S')] ✓${NC} $1"; }
+warn()    { echo -e "${YELLOW}[$(date '+%H:%M:%S')] ⚠${NC} $1"; }
+fail()    { echo -e "${RED}[$(date '+%H:%M:%S')] ✗${NC} $1"; }
+step()    { echo -e "${BLUE}[$(date '+%H:%M:%S')]${NC}   → $1"; }
+
+print_banner() {
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo -e " ${BLUE}Ralph${NC} — orquestrador de fases (Cursor Agent)"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo -e "  Plano:      ${INPUT_FILE}"
+  echo -e "  Engine:     ${ENGINE}"
+  echo -e "  Validação:  ${RALPH_VALIDATE}"
+  echo -e "  Console:    $([ "$RALPH_VERBOSE" = "1" ] && echo "verbose (saída do agent no terminal)" || echo "quiet (spinner + logs em .phases/logs/)")"
+  echo -e "  Logs:       ${LOG_DIR}/"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+}
+
+print_progress_bar() {
+  local current=$1
+  local total=$2
+  local width=30
+  local filled=$((current * width / total))
+  local empty=$((width - filled))
+  local bar
+  bar=$(printf '%*s' "$filled" '' | tr ' ' '█')
+  local spaces
+  spaces=$(printf '%*s' "$empty" '')
+  echo -e "  ${BLUE}[${bar}${spaces}]${NC} ${current}/${total}"
+}
+
+spinner_wait() {
+  local pid=$1
+  local message=$2
+  local frames=('|' '/' '-' '\\')
+  local i=0
+
+  while kill -0 "$pid" 2>/dev/null; do
+    printf "\r${BLUE}[$(date '+%H:%M:%S')]${NC} %s %s " "${frames[$i]}" "$message"
+    i=$(((i + 1) % 4))
+    sleep 0.2
+  done
+  printf "\r\033[K"
+}
+
+confirm() {
+  local prompt=$1
+  if $RALPH_YES; then
+    return 0
+  fi
+  read -p "$prompt" -n 1 -r
+  echo
+  [[ ! $REPLY =~ ^[Nn]$ ]]
+}
+
+show_status() {
+  if [ ! -f "$INPUT_FILE" ] && [ ! -f "$MANIFEST" ]; then
+    fail "Arquivo não encontrado: $INPUT_FILE"
+    exit 1
+  fi
+
+  local -a phase_files=()
+  local -a phase_titles=()
+
+  if [ -f "$MANIFEST" ]; then
+    while IFS="|" read -r file title; do
+      phase_files+=("$file")
+      phase_titles+=("$title")
+    done < "$MANIFEST"
+  else
+    while IFS= read -r line || [ -n "$line" ]; do
+      if [[ "$line" =~ ^##[[:space:]]+(Phase[[:space:]]+[0-9]+[^#]*) ]]; then
+        local raw_title="${BASH_REMATCH[1]}"
+        raw_title="$(echo "$raw_title" | sed 's/[[:space:]]*$//')"
+        phase_titles+=("$raw_title")
+        phase_files+=("")
+      fi
+    done < "$INPUT_FILE"
+  fi
+
+  local total=${#phase_titles[@]}
+  if [ "$total" -eq 0 ]; then
+    fail "Nenhuma fase ## Phase N encontrada em $INPUT_FILE"
+    exit 1
+  fi
+
+  local done_count=0
+
+  echo ""
+  log "Status do plano ($INPUT_FILE)"
+  echo ""
+
+  local num=0
+  for title in "${phase_titles[@]}"; do
+    num=$((num + 1))
+    local file="${phase_files[$((num - 1))]:-}"
+    if [ -n "$file" ] && is_phase_done "$file"; then
+      done_count=$((done_count + 1))
+      echo -e "  ${GREEN}✓${NC} [$num/$total] $title"
+    else
+      echo -e "  ${YELLOW}○${NC} [$num/$total] $title"
+    fi
+  done
+
+  echo ""
+  print_progress_bar "$done_count" "$total"
+  echo ""
+
+  if [ -d "$LOG_DIR" ]; then
+    log "Logs recentes:"
+    ls -1t "$LOG_DIR"/*.log 2>/dev/null | head -5 | while read -r f; do
+      echo "    $f"
+    done || true
+  fi
+  echo ""
+}
 
 format_duration() {
   local total_seconds=$1
@@ -261,16 +398,62 @@ export_ralph_context() {
 run_engine() {
   local prompt_file="$1"
   local log_file="$2"
+  local engine_pid
+  local engine_status=0
 
   export_ralph_context
 
-  if [[ "$ENGINE" == "cursor" ]]; then
-    agent -p --force --trust --workspace "$(pwd)" "$(cat "$prompt_file")" 2>&1 | tee "$log_file"
-  elif [[ "$ENGINE" == "codex" ]]; then
-    cat "$prompt_file" | codex exec --sandbox danger-full-access - 2>&1 | tee "$log_file"
-  elif [[ "$ENGINE" == "claude" ]]; then
-    env -u CLAUDECODE claude --dangerously-skip-permissions -p "$(cat "$prompt_file")" --output-format text --verbose 2>&1 | tee "$log_file"
+  step "Agent ($ENGINE) — tentativa ${RALPH_PHASE_ATTEMPT}/${RALPH_PHASE_MAX_ATTEMPTS}"
+  step "Log: $log_file"
+
+  if [[ "$RALPH_VERBOSE" == "1" ]]; then
+    echo "  ─────────────────────────────────────────────────"
   fi
+
+  if [[ "$ENGINE" == "cursor" ]]; then
+    if [[ "$RALPH_VERBOSE" == "1" ]]; then
+      agent -p --force --trust --workspace "$(pwd)" "$(cat "$prompt_file")" 2>&1 | tee "$log_file"
+      engine_status=${PIPESTATUS[0]}
+    else
+      agent -p --force --trust --workspace "$(pwd)" "$(cat "$prompt_file")" > "$log_file" 2>&1 &
+      engine_pid=$!
+      spinner_wait "$engine_pid" "Fase ${RALPH_PHASE_NUM}/${RALPH_PHASE_TOTAL}: ${RALPH_PHASE_TITLE}…"
+      wait "$engine_pid" || engine_status=$?
+    fi
+  elif [[ "$ENGINE" == "codex" ]]; then
+    if [[ "$RALPH_VERBOSE" == "1" ]]; then
+      cat "$prompt_file" | codex exec --sandbox danger-full-access - 2>&1 | tee "$log_file"
+      engine_status=${PIPESTATUS[0]}
+    else
+      cat "$prompt_file" | codex exec --sandbox danger-full-access - > "$log_file" 2>&1 &
+      engine_pid=$!
+      spinner_wait "$engine_pid" "Fase ${RALPH_PHASE_NUM}/${RALPH_PHASE_TOTAL}: ${RALPH_PHASE_TITLE}…"
+      wait "$engine_pid" || engine_status=$?
+    fi
+  elif [[ "$ENGINE" == "claude" ]]; then
+    if [[ "$RALPH_VERBOSE" == "1" ]]; then
+      env -u CLAUDECODE claude --dangerously-skip-permissions -p "$(cat "$prompt_file")" --output-format text --verbose 2>&1 | tee "$log_file"
+      engine_status=${PIPESTATUS[0]}
+    else
+      env -u CLAUDECODE claude --dangerously-skip-permissions -p "$(cat "$prompt_file")" --output-format text --verbose > "$log_file" 2>&1 &
+      engine_pid=$!
+      spinner_wait "$engine_pid" "Fase ${RALPH_PHASE_NUM}/${RALPH_PHASE_TOTAL}: ${RALPH_PHASE_TITLE}…"
+      wait "$engine_pid" || engine_status=$?
+    fi
+  fi
+
+  if [[ "$RALPH_VERBOSE" == "1" ]]; then
+    echo "  ─────────────────────────────────────────────────"
+  fi
+
+  if [ "$engine_status" -ne 0 ]; then
+    warn "Agent encerrou com código $engine_status (últimas linhas do log):"
+    tail -8 "$log_file" 2>/dev/null | sed 's/^/    /' || true
+    return "$engine_status"
+  fi
+
+  success "Agent concluiu o turno"
+  return 0
 }
 
 validate_phase() {
@@ -285,16 +468,42 @@ validate_phase() {
     return 0
   fi
 
-  log "Validação pós-fase (${RALPH_VALIDATE})..."
+  step "Validação pós-fase (${RALPH_VALIDATE})"
+
+  local validate_status=0
 
   case "$RALPH_VALIDATE" in
     full)
-      vendor/bin/sail composer test 2>&1 | tee -a "$log_file"
+      if [[ "$RALPH_VERBOSE" == "1" ]]; then
+        vendor/bin/sail composer test 2>&1 | tee -a "$log_file"
+        validate_status=${PIPESTATUS[0]}
+      else
+        vendor/bin/sail composer test >> "$log_file" 2>&1
+        validate_status=$?
+        if [ "$validate_status" -eq 0 ]; then
+          success "composer test — OK"
+        else
+          fail "composer test — falhou (veja $log_file)"
+        fi
+      fi
       ;;
     quick)
-      vendor/bin/sail artisan test --compact 2>&1 | tee -a "$log_file"
+      if [[ "$RALPH_VERBOSE" == "1" ]]; then
+        vendor/bin/sail artisan test --compact 2>&1 | tee -a "$log_file"
+        validate_status=${PIPESTATUS[0]}
+      else
+        vendor/bin/sail artisan test --compact >> "$log_file" 2>&1
+        validate_status=$?
+        if [ "$validate_status" -eq 0 ]; then
+          success "artisan test --compact — OK"
+        else
+          fail "artisan test — falhou (veja $log_file)"
+        fi
+      fi
       ;;
   esac
+
+  return "$validate_status"
 }
 
 run_phase() {
@@ -311,7 +520,10 @@ run_phase() {
   export RALPH_PHASE_TOTAL="$total_phases"
 
   echo ""
-  log "[$phase_num/$total_phases] $phase_title"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  log "Fase $phase_num/$total_phases — $phase_title"
+  print_progress_bar "$((phase_num - 1))" "$total_phases"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   local attempt=0
   local phase_success=false
@@ -326,6 +538,7 @@ run_phase() {
 
     local prompt_file
     if [ $attempt -eq 1 ]; then
+      step "Gerando prompt"
       prompt_file=$(build_prompt_file "$phase_file")
     else
       local test_output
@@ -373,30 +586,33 @@ is_phase_done() {
 }
 
 main() {
+  if $SHOW_STATUS_ONLY; then
+    show_status
+    exit 0
+  fi
+
   preflight_checks
   split_phases
+  print_banner
 
   local total_phases
   total_phases=$(wc -l < "$MANIFEST")
 
-  echo ""
-  log "$total_phases fases para implementar (engine: $ENGINE)"
+  log "$total_phases fases para implementar"
   echo ""
 
   local num=0
   while IFS="|" read -r file title; do
     num=$((num + 1))
     if is_phase_done "$file"; then
-      echo -e "  ${GREEN}[$num] $title (já completada)${NC}"
+      echo -e "  ${GREEN}✓${NC} [$num/$total_phases] $title (já completada)"
     else
-      echo -e "  ${YELLOW}[$num] $title${NC}"
+      echo -e "  ${YELLOW}○${NC} [$num/$total_phases] $title"
     fi
   done < "$MANIFEST"
 
   echo ""
-  read -p "Iniciar implementação? (Y/n) " -n 1 -r
-  echo
-  [[ $REPLY =~ ^[Nn]$ ]] && exit 0
+  confirm "Iniciar implementação? (Y/n) " || exit 0
 
   local start_time
   start_time=$(date +%s)
@@ -422,9 +638,7 @@ main() {
       failed_phases+=("$title")
       echo ""
       warn "Fase falhou: $title"
-      read -p "Continuar para a próxima fase? (Y/n) " -n 1 -r
-      echo
-      [[ $REPLY =~ ^[Nn]$ ]] && break
+      confirm "Continuar para a próxima fase? (Y/n) " || break
     fi
   done < "$MANIFEST"
 
