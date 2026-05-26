@@ -26,5 +26,6 @@ Homestead.yaml
 /.zed
 /tmp/
 .harness/
+.phases/
 .cursor/.env
 laradumps.yaml
