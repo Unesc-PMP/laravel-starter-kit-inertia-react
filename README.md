@@ -1,101 +1,129 @@
-- Inertia & React (this project) version: **[github.com/nunomaduro/laravel-starter-kit-inertia-react](https://github.com/nunomaduro/laravel-starter-kit-inertia-react)**
-- Blade version: **[github.com/nunomaduro/laravel-starter-kit](https://github.com/nunomaduro/laravel-starter-kit)**
-- Inertia & Vue version: **[github.com/nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue)**
+- Versão Inertia & React (este projeto): **[github.com/nunomaduro/laravel-starter-kit-inertia-react](https://github.com/nunomaduro/laravel-starter-kit-inertia-react)**
+- Versão Blade: **[github.com/nunomaduro/laravel-starter-kit](https://github.com/nunomaduro/laravel-starter-kit)**
+- Versão Inertia & Vue: **[github.com/nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue)**
 
 <p align="center">
     <a href="https://youtu.be/VhzP0XWGTC4" target="_blank">
-        <img src="https://github.com/nunomaduro/laravel-starter-kit/blob/main/art/banner.png" alt="Overview Laravel Starter Kit" style="width:70%;">
+        <img src="https://github.com/nunomaduro/laravel-starter-kit/blob/main/art/banner.png" alt="Visão geral do Laravel Starter Kit" style="width:70%;">
     </a>
 </p>
 
 <p>
-    <a href="https://github.com/nunomaduro/laravel-starter-kit-inertia-react/actions"><img src="https://github.com/nunomaduro/laravel-starter-kit-inertia-react/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/dt/nunomaduro/laravel-starter-kit-inertia-react" alt="Total Downloads"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/v/nunomaduro/laravel-starter-kit-inertia-react" alt="Latest Stable Version"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/l/nunomaduro/laravel-starter-kit-inertia-react" alt="License"></a>
-    <a href="https://youtube.com/@nunomaduro?sub_confirmation=1"><img alt="YouTube Channel Subscribers" src="https://img.shields.io/youtube/channel/subscribers/UCO_hYZF2gb_CyG5sA7ArlGg?style=flat&label=youtube&color=brightgreen"></a>
+    <a href="https://github.com/nunomaduro/laravel-starter-kit-inertia-react/actions"><img src="https://github.com/nunomaduro/laravel-starter-kit-inertia-react/actions/workflows/tests.yml/badge.svg" alt="Status do build"></a>
+    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/dt/nunomaduro/laravel-starter-kit-inertia-react" alt="Total de downloads"></a>
+    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/v/nunomaduro/laravel-starter-kit-inertia-react" alt="Última versão estável"></a>
+    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/l/nunomaduro/laravel-starter-kit-inertia-react" alt="Licença"></a>
+    <a href="https://youtube.com/@nunomaduro?sub_confirmation=1"><img alt="Inscritos no canal do YouTube" src="https://img.shields.io/youtube/channel/subscribers/UCO_hYZF2gb_CyG5sA7ArlGg?style=flat&label=youtube&color=brightgreen"></a>
 </p>
 
-**Laravel Starter Kit (Inertia & React)** is an ultra-strict, type-safe [Laravel](https://laravel.com) skeleton engineered for developers who refuse to compromise on code quality. This opinionated starter kit enforces rigorous development standards through meticulous tooling configuration and architectural decisions that prioritize type safety, immutability, and fail-fast principles.
+**Laravel Starter Kit (Inertia & React)** é um esqueleto [Laravel](https://laravel.com) ultra-rigoroso e type-safe, pensado para quem não abre mão de qualidade de código. Este starter kit opinativo impõe padrões de desenvolvimento exigentes por meio de ferramentas bem configuradas e decisões de arquitetura que priorizam segurança de tipos, imutabilidade e falha rápida.
 
-## Why This Starter Kit?
+## Por que este starter kit?
 
-Modern PHP has evolved into a mature, type-safe language, yet many Laravel projects still operate with loose conventions and optional typing. This starter kit changes that paradigm by enforcing:
+O PHP moderno evoluiu para uma linguagem madura e type-safe, mas muitos projetos Laravel ainda usam convenções soltas e tipagem opcional. Este starter kit muda esse paradigma ao impor:
 
-- **Fully Actions-Oriented Architecture**: Every operation is encapsulated in a single-action class
-- **Cruddy by Design**: Standardized CRUD operations for all controllers, actions, and Inertia & React pages
-- **100% Type Coverage**: Every method, property, and parameter is explicitly typed
-- **Zero Tolerance for Code Smells**: Rector, PHPStan, OxLint, and Oxfmt at maximum strictness catch issues before they become bugs
-- **Immutable-First Architecture**: Data structures favor immutability to prevent unexpected mutations
-- **Fail-Fast Philosophy**: Errors are caught at compile-time, not runtime
-- **Automated Code Quality**: Pre-configured tools ensure consistent, pristine code across your entire team
-- **Just Better Laravel Defaults**: Thanks to **[Essentials](https://github.com/nunomaduro/essentials)** / strict models, auto eager loading, immutable dates, and more...
-- **AI Guidelines**: Integrated AI Guidelines to assist in maintaining code quality and consistency
-- **Full Testing Suite**: More than 150 tests with 100% code coverage using Pest
-- 
-This isn't just another Laravel boilerplate—it's a statement that PHP applications can and should be built with the same rigor as strongly-typed languages like Rust or TypeScript.
+- **Arquitetura orientada a Actions**: cada operação fica em uma classe de ação única
+- **Cruddy by Design**: operações CRUD padronizadas em controllers, actions e páginas Inertia & React
+- **100% de cobertura de tipos**: todo método, propriedade e parâmetro é tipado explicitamente
+- **Tolerância zero a code smells**: Rector, PHPStan, OxLint e Oxfmt no máximo rigor pegam problemas antes de virarem bugs
+- **Arquitetura imutável em primeiro lugar**: estruturas de dados favorecem imutabilidade para evitar mutações inesperadas
+- **Filosofia fail-fast**: erros são detectados em tempo de compilação, não em runtime
+- **Qualidade de código automatizada**: ferramentas pré-configuradas mantêm o código consistente em todo o time
+- **Defaults Laravel melhores**: graças ao **[Essentials](https://github.com/nunomaduro/essentials)** — models estritos, eager loading automático, datas imutáveis e mais
+- **Diretrizes de IA**: guidelines integradas para ajudar a manter qualidade e consistência
+- **Suíte de testes completa**: mais de 150 testes com 100% de cobertura de código usando Pest
 
-## Getting Started
+Não é só mais um boilerplate Laravel — é a ideia de que aplicações PHP podem e devem ser construídas com o mesmo rigor de linguagens fortemente tipadas como Rust ou TypeScript.
 
-> **Requires [PHP 8.5+](https://php.net/releases/) and a code coverage driver like [xdebug](https://xdebug.org/docs/install)**.
+## Começando
 
-Create your type-safe Laravel application using [Composer](https://getcomposer.org):
+O ambiente local usa **[Laravel Sail](https://laravel.com/docs/sail)** (Docker): PHP 8.5, PostgreSQL, Redis e Mailpit. Você **não precisa** instalar PHP, Composer ou Bun no host — só **Git** e **Docker**.
 
-```bash
-composer create-project nunomaduro/laravel-starter-kit-inertia-react --prefer-dist example-app
-```
+No WSL2 (Ubuntu): instale o [Docker Desktop](https://www.docker.com/products/docker-desktop/) no Windows, ative **WSL Integration** para sua distro e confira `docker compose version`.
 
-### Initial Setup
-
-Navigate to your project and complete the setup:
+### Primeira vez
 
 ```bash
-cd example-app
+git clone <url-do-repositorio>
+cd laravel-starter-kit-inertia-react
 
-# Setup the project
-composer setup
+# Dependências PHP (sem Composer no host)
+docker run --rm \
+  -v "$(pwd):/app" -w /app \
+  composer:latest \
+  composer install --ignore-platform-req=ext-sockets
 
-# Start the development server
-composer dev
+cp .env.example .env
+echo "WWWGROUP=$(id -g)" >> .env
+echo "WWWUSER=$(id -u)" >> .env
+
+./vendor/bin/sail build
+./vendor/bin/sail up -d
+
+./vendor/bin/sail composer setup
+./vendor/bin/sail bunx playwright install
 ```
 
-### Optional: Browser Testing Setup
+O script `composer setup` gera a `APP_KEY`, roda as migrations, instala dependências Bun e faz o build do frontend.
 
-If you plan to use Pest's browser testing capabilities:
+### Desenvolvimento
 
 ```bash
-bun add playwright
-bunx playwright install
+./vendor/bin/sail up -d              # app em http://localhost
+./vendor/bin/sail bun run dev        # Vite (http://localhost:5173)
+./vendor/bin/sail stop               # parar containers
 ```
 
-### Verify Installation
+| Serviço | URL |
+|--------|-----|
+| Aplicação | http://localhost |
+| Vite | http://localhost:5173 |
+| Mailpit | http://localhost:8025 |
 
-Run the test suite to ensure everything is configured correctly:
+Alias opcional (`~/.bashrc`):
 
 ```bash
-composer test
+alias sail='[ -f sail ] && sh sail || sh vendor/bin/sail'
 ```
 
-You should see 100% test coverage and all quality checks passing.
+Depois use `sail` no lugar de `./vendor/bin/sail`.
 
-## Available Tooling
+### Validar instalação
 
-### Development
-- `composer dev` - Starts Laravel server, queue worker, log monitoring, and Vite+ dev server concurrently
+```bash
+./vendor/bin/sail composer test
+```
 
-### Code Quality
-- `composer lint` - Runs Rector (refactoring), Pint (PHP formatting), and Oxfmt (JS/TS formatting)
-- `composer test:lint` - Dry-run mode for CI/CD pipelines
+Deve passar com 100% de cobertura e todas as checagens de qualidade.
 
-### Testing
-- `composer test:type-coverage` - Ensures 100% type coverage with Pest
-- `composer test:types` - Runs PHPStan at level 9 (maximum strictness)
-- `composer test:unit` - Runs Pest tests with 100% code coverage requirement
-- `composer test` - Runs the complete test suite (type coverage, unit tests, linting, static analysis)
+> **Stack local (sem Docker):** se você já tiver PHP 8.5+, Composer, Bun e Xdebug no host, pode usar `composer setup`, `composer dev` e `composer test` diretamente. Os testes usam SQLite em memória (`phpunit.xml`); o `.env` de desenvolvimento aponta para PostgreSQL via Sail.
 
-### Maintenance
-- `composer update:requirements` - Updates all PHP and Bun dependencies to latest versions
+## Ferramentas disponíveis
 
-## License
+Execute os scripts **dentro do Sail** com `sail composer …` ou `sail bun …` (ou `./vendor/bin/sail`).
 
-**Laravel Starter Kit Inertia React** was created by **[Nuno Maduro](https://x.com/enunomaduro)** under the **[MIT license](https://opensource.org/licenses/MIT)**.
+### Desenvolvimento
+
+- `sail bun run dev` — Vite com HMR (use com `sail up -d`)
+- `sail artisan queue:listen` — worker de filas, se precisar
+- `sail artisan pail` — logs em tempo real
+
+### Qualidade de código
+
+- `sail composer lint` — Rector, Pint e Oxfmt
+- `sail composer test:lint` — modo dry-run (CI)
+
+### Testes
+
+- `sail composer test:type-coverage` — cobertura de tipos (Pest), mínimo 100%
+- `sail composer test:types` — PHPStan (nível 9) e checagem TypeScript
+- `sail composer test:unit` — Pest com cobertura de código 100%
+- `sail composer test` — suíte completa (tipos, testes, lint, análise estática)
+
+### Manutenção
+
+- `sail composer update:requirements` — atualiza dependências PHP e Bun
+
+## Licença
+
+**Laravel Starter Kit Inertia React** foi criado por **[Nuno Maduro](https://x.com/enunomaduro)** sob a **[licença MIT](https://opensource.org/licenses/MIT)**.
