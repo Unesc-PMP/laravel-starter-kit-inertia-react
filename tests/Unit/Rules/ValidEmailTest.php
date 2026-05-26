@@ -117,3 +117,43 @@ it('fails with invalid email', function (string $email): void {
     'user@sub.-domain.com',
     '𝓊𝓃𝒾𝒸ℴ𝒹ℯ@𝒹ℴ𝓂𝒶𝒾𝓃.𝒸ℴ𝓂',
 ]);
+
+it('fails with non-string value', function (): void {
+    $rule = new ValidEmail;
+
+    $failed = false;
+
+    $rule->validate('email', 123, function () use (&$failed): void {
+        $failed = true;
+    });
+
+    expect($failed)->toBeTrue();
+});
+
+it('fails when the email cannot be validated by the pattern engine', function (): void {
+    $previousBacktrackLimit = ini_get('pcre.backtrack_limit');
+    $previousRecursionLimit = ini_get('pcre.recursion_limit');
+
+    ini_set('pcre.backtrack_limit', '1');
+    ini_set('pcre.recursion_limit', '1');
+
+    try {
+        $rule = new ValidEmail;
+
+        $failed = false;
+        $message = null;
+
+        $email = str_repeat('a', 5000).'@'.str_repeat('b', 5000).'.com';
+
+        $rule->validate('email', $email, function (string $validationMessage) use (&$failed, &$message): void {
+            $failed = true;
+            $message = $validationMessage;
+        });
+
+        expect($failed)->toBeTrue()
+            ->and($message)->toBe('The :attribute must be a valid email address.');
+    } finally {
+        ini_set('pcre.backtrack_limit', (string) $previousBacktrackLimit);
+        ini_set('pcre.recursion_limit', (string) $previousRecursionLimit);
+    }
+});
