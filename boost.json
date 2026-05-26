@@ -15,7 +15,7 @@
     "packages": [
         "laravel/fortify"
     ],
-    "sail": false,
+    "sail": true,
     "skills": [
         "laravel-best-practices",
         "wayfinder-development",
