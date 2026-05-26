@@ -19,7 +19,24 @@ session=$(echo "$input" | jq -r '.conversation_id // .session_id // empty')
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
 
 if [[ -z "$msg" ]]; then
-  msg="[cursor] ${event} em ${branch}"
+  if [[ -n "${RALPH_PHASE_TITLE:-}" ]]; then
+    phase_num="${RALPH_PHASE_NUM:-?}"
+    phase_total="${RALPH_PHASE_TOTAL:-?}"
+    attempt="${RALPH_PHASE_ATTEMPT:-1}"
+    max_attempts="${RALPH_PHASE_MAX_ATTEMPTS:-?}"
+    engine="${RALPH_ENGINE:-cursor}"
+
+    case "$event" in
+      stop)
+        msg="[ralph/${engine}] Fase ${phase_num}/${phase_total} finalizou turno — ${RALPH_PHASE_TITLE} (tentativa ${attempt}/${max_attempts})"
+        ;;
+      *)
+        msg="[ralph/${engine}] ${event} — Fase ${phase_num}/${phase_total} ${RALPH_PHASE_TITLE}"
+        ;;
+    esac
+  else
+    msg="[cursor] ${event} em ${branch}"
+  fi
 fi
 
 payload=$(jq -n \
@@ -29,7 +46,11 @@ payload=$(jq -n \
   --arg branch "$branch" \
   --arg cwd "$PWD" \
   --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  '{event: $event, message: $msg, session_id: $session, branch: $branch, cwd: $cwd, ts: $ts}')
+  --arg phase "${RALPH_PHASE_TITLE:-}" \
+  --arg phase_num "${RALPH_PHASE_NUM:-}" \
+  --arg phase_total "${RALPH_PHASE_TOTAL:-}" \
+  --arg attempt "${RALPH_PHASE_ATTEMPT:-}" \
+  '{event: $event, message: $msg, session_id: $session, branch: $branch, cwd: $cwd, ts: $ts, phase: $phase, phase_num: $phase_num, phase_total: $phase_total, attempt: $attempt}')
 
 curl_args=(-sS -X POST -H "Content-Type: application/json" -d "$payload")
 

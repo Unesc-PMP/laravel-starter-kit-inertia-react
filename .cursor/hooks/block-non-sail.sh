@@ -8,8 +8,8 @@ cmd=$(echo "$input" | jq -r '.command // empty')
 # já usa sail → libera
 echo "$cmd" | grep -qE '(^|[[:space:];&|])(\./)?vendor/bin/sail([[:space:]]|$)|(^|[[:space:];&|])sail([[:space:]]|$)' && exit 0
 
-# libera git/gh no host (evita falso positivo com "composer"/"artisan" em mensagens)
-if echo "$cmd" | grep -qE '(^|[[:space:];&|])(git[[:space:]]+(add|commit|status|diff|log|push|pull|fetch|merge|rebase|checkout|branch|stash|restore|reset|show|rev-parse)|gh[[:space:]]+(pr|issue|repo|api))'; then
+# libera git/gh, ralph e cursor agent no host
+if echo "$cmd" | grep -qE '(^|[[:space:];&|])(git[[:space:]]+(add|commit|status|diff|log|push|pull|fetch|merge|rebase|checkout|branch|stash|restore|reset|show|rev-parse)|gh[[:space:]]+(pr|issue|repo|api)|(\./)?ralph\.sh|agent[[:space:]])'; then
   exit 0
 fi
 
