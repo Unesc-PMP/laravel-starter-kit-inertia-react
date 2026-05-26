@@ -230,7 +230,7 @@ O projeto inclui [hooks do Cursor](https://cursor.com/docs/agent/hooks) em `.cur
 | `beforeShellExecution` | `block-non-sail.sh` | Bloqueia `php`, `composer`, `bun`, `npm`, `pest`, `artisan` etc. **fora** do Sail |
 | `afterFileEdit` | `pint-and-test.sh` | Roda Pint no `.php` editado; se for `tests/`, executa Pest com `--filter` (saída JSON via [PAO](https://github.com/laravel/pao) quando o Agent está ativo) |
 | `beforeSubmitPrompt` / `postToolUse` / `stop` | `log-event.sh` | Grava eventos em `.harness/events.jsonl` (gitignored) |
-| `stop` | `notify-n8n.sh` | Webhook opcional (só se `.cursor/.env` estiver configurado) |
+| `stop` | `notify-n8n.sh` | Webhook opcional; com Ralph ativo, inclui fase/tentativa via `RALPH_*` |
 
 **Pré-requisitos no host:** [jq](https://jqlang.org/) instalado e Sail em execução (`sail up -d`) para Pint e testes automáticos. Se o Sail estiver parado, `pint-and-test.sh` apenas avisa e não bloqueia.
 
@@ -256,6 +256,51 @@ HARNESS_NOTIFY_PASSWORD=
 **Depuração:** aba **Hooks** nas configurações do Cursor ou canal de saída **Hooks** — útil para ver bloqueios, Pint e falhas de teste. Reinicie o Cursor após alterar `hooks.json`.
 
 A suíte completa (cobertura 100%, lint, types, browser) continua sendo `sail composer test` (local) ou o workflow de CI — os hooks cobrem feedback rápido no dia a dia, não substituem o pipeline.
+
+### Ralph (orquestrador de fases no Cursor)
+
+O script [`ralph.sh`](ralph.sh) adapta o loop de fases do [worthly-api](https://github.com/beerandcodeteam/worthly-api/blob/main/ralph.sh) para este starter kit: lê um plano em Markdown, executa cada fase com o **Cursor Agent CLI** e valida com Sail entre fases.
+
+**Pré-requisitos**
+
+1. [Cursor Agent CLI](https://cursor.com/docs/cli) instalado (`agent`) e autenticado: `agent login`
+2. Plano de fases: copie o exemplo (estrutura alinhada ao [worthly-api `project-phases.md`](https://github.com/beerandcodeteam/worthly-api/blob/main/docs/project-phases.md) — sub-fases `###`, tarefas numeradas, blocos **Feature tests**) e edite:
+
+```bash
+cp docs/project-phases.example.md docs/project-phases.md
+```
+
+3. Sail em execução: `vendor/bin/sail up -d`
+4. `jq` no host (usado pelos hooks)
+
+**Uso**
+
+```bash
+chmod +x ralph.sh
+./ralph.sh                          # docs/project-phases.md, engine cursor
+./ralph.sh --engine cursor docs/project-phases.md
+RALPH_VALIDATE=full ./ralph.sh      # validação: sail composer test
+RALPH_VALIDATE=none ./ralph.sh      # sem validação automática entre fases
+```
+
+| Variável | Valores | Padrão | Descrição |
+|----------|---------|--------|-----------|
+| `RALPH_VALIDATE` | `quick`, `full`, `none` | `quick` | `quick` = `sail artisan test --compact`; `full` = `sail composer test` |
+| `RALPH_ENGINE` | (via `--engine`) | `cursor` | `cursor` usa `agent -p --force --trust`; `claude` / `codex` são legado worthly |
+
+Cada **execução** do Ralph corresponde a um cabeçalho `## Phase N — Título` (sub-fases `### Phase N.M` ficam no mesmo prompt, como no worthly). O script grava prompts, logs e progresso em `.phases/` (gitignored) e pode fazer commit por fase se o repositório estiver limpo.
+
+**Integração com hooks**
+
+- `block-non-sail.sh` permite `./ralph.sh` e `agent` no host (o Agent CLI não roda dentro do container).
+- Durante o Ralph, `ralph.sh` exporta `RALPH_PHASE_*` para o ambiente; o hook `notify-n8n.sh` (no evento `stop`) monta mensagens com contexto da fase quando `HARNESS_NOTIFY_WEBHOOK_URL` estiver definido.
+
+**Engines**
+
+| Engine | Comando | Quando usar |
+|--------|---------|-------------|
+| `cursor` | `agent -p --force --trust --workspace …` | Padrão — mesmo ecossistema dos hooks em `.cursor/` |
+| `claude` / `codex` | CLIs legadas | Só se você já usa o harness worthly no host |
 
 ## Licença
 
