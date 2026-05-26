@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use UnexpectedValueException;
 
 final class UpdateUserRequest extends FormRequest
 {
@@ -17,7 +18,8 @@ final class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
-        assert($user instanceof User);
+
+        throw_unless($user instanceof User, UnexpectedValueException::class, 'The authenticated user must be an instance of '.User::class.'.');
 
         return [
             'name' => ['required', 'string', 'max:255'],
