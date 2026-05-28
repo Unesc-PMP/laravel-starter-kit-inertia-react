@@ -108,6 +108,79 @@ Execute os scripts **dentro do Sail** com `sail composer …` ou `sail bun …` 
 - `sail bun run dev` — Vite com HMR (use com `sail up -d`)
 - `sail artisan queue:listen` — worker de filas, se precisar
 - `sail artisan pail` — logs em tempo real
+- `sail composer dev` — sobe servidor, filas, **Pail** e Vite juntos
+
+### Observabilidade e debug (local)
+
+Pacotes para inspecionar requests, queries, logs e exceções em desenvolvimento. Funcionam com `APP_DEBUG=true` e **não** devem ir para produção.
+
+| Ferramenta | Pacote | Acesso rápido |
+|------------|--------|---------------|
+| Log Viewer | `opcodesio/log-viewer` | http://localhost/log-viewer |
+| Debugbar | `fruitcake/laravel-debugbar` | barra no rodapé de cada página |
+| Agent Debugger | `clcbws/laravel-agents-debug` | http://localhost/_agent_debug/dashboard |
+| LaraDumps | `laradumps/laradumps` | app desktop (porta 9191) |
+| Pail | `laravel/pail` | terminal (`sail artisan pail`) |
+
+#### Log Viewer
+
+Interface web para ler `storage/logs/laravel.log` (busca, filtros, download). Com o Sail rodando, acesse **http://localhost/log-viewer**.
+
+Em produção, configure autorização em `AppServiceProvider` (`LogViewer::auth(...)`) antes de expor a rota.
+
+#### Laravel Debugbar
+
+Ativo automaticamente quando `APP_DEBUG=true`. Mostra queries, tempo, memória, rotas, sessão e exceções na barra inferior do navegador.
+
+```bash
+# CLI — útil para Agents e terminal
+sail artisan debugbar:find --issues --max=20   # requests com N+1, queries lentas, etc.
+sail artisan debugbar:get latest               # detalhe da última request
+sail artisan debugbar:queries {id}             # analisar SQL de uma request
+sail artisan debugbar:clear                    # limpar histórico em storage/debugbar/
+```
+
+Os snapshots ficam em `storage/debugbar/` (gitignored). Config em `config/debugbar.php`.
+
+#### Laravel Agent Debugger
+
+Dashboard server-side com profilers (N+1, transações, gates, SQL playground, mocks, testes). Pensado para humanos e Agents de IA.
+
+```bash
+sail artisan agent:debug-on       # ativar (primeira vez)
+sail artisan agent:debug-status   # ver se está ativo
+sail artisan agent:debug-tail     # stream de logs no terminal
+sail artisan agent:debug-off      # desativar
+```
+
+Depois abra http://localhost/_agent_debug/dashboard.
+
+#### LaraDumps
+
+Envia dumps para o [app desktop LaraDumps](https://laradumps.dev/get-started/installation.html) — fora do browser, sem poluir a resposta HTML.
+
+1. Instale e abra o app desktop no host (Windows/macOS/Linux).
+2. No código:
+
+```php
+ds('valor');           // dump
+ds()->label('user')->dump($user);
+```
+
+3. Com Sail/WSL, o pacote usa `host.docker.internal:9191` para falar com o app no host. Gere ou ajuste `laradumps.yaml` com `sail artisan ds:init` (arquivo gitignored).
+
+Observers (queries, mail, jobs, etc.) ligam/desligam em `laradumps.yaml` → seção `observers`.
+
+#### Pail
+
+Tail dos logs Laravel no terminal, com cores e filtros.
+
+```bash
+sail artisan pail
+sail artisan pail --filter="error"
+```
+
+Já incluso no script `composer dev` (roda em paralelo com servidor e Vite).
 
 ### Qualidade de código
 
