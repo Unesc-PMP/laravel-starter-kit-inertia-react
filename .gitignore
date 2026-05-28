@@ -29,3 +29,4 @@ Homestead.yaml
 .phases/
 .cursor/.env
 laradumps.yaml
+storage/debugbar/
