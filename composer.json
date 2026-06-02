@@ -45,13 +45,21 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "classmap": [
+            "app/Checkpoint/Scanner.php"
+        ],
+        "exclude-from-classmap": [
+            "vendor/andreapollastri/checkpoint/src/Scanner.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/",
-            "Checkpoint\\": "app/Checkpoint/"
-        }
+            "Tests\\": "tests/"
+        },
+        "classmap": [
+            "tests/Stubs/App/Checkpoint/Checks/FakeNotCheck.php"
+        ]
     },
     "scripts": {
         "setup": [
