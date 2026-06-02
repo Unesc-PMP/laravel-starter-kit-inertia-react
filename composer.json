@@ -49,7 +49,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "tests/",
+            "Checkpoint\\": "app/Checkpoint/"
         }
     },
     "scripts": {
@@ -72,7 +73,8 @@
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan clear",
-            "@update:requirements"
+            "@update:requirements",
+            "@php artisan checkpoint:scan"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
@@ -107,6 +109,9 @@
             "@test:unit",
             "@test:lint",
             "@test:types"
+        ],
+        "post-install-cmd": [
+            "@php artisan checkpoint:scan"
         ]
     },
     "extra": {
