@@ -198,6 +198,54 @@ Já incluso no script `composer dev` (roda em paralelo com servidor e Vite).
 
 - `sail composer update:requirements` — atualiza dependências PHP e Bun
 
+### Auditoria de segurança (Checkpoint)
+
+O projeto usa **[andreapollastri/checkpoint](https://github.com/andreapollastri/checkpoint)** para varredura de segurança da aplicação Laravel, dependências Composer e código PHP.
+
+#### Rodar o scan
+
+```bash
+vendor/bin/sail artisan checkpoint:scan
+vendor/bin/sail artisan checkpoint:scan --json          # saída JSON (CI)
+vendor/bin/sail artisan checkpoint:scan --only="SQL Injection Risks"
+vendor/bin/sail artisan checkpoint:scan --skip="Environment Configuration"
+```
+
+O scan também roda automaticamente após `composer install` / `composer update` (hooks em `composer.json`).
+
+#### Bun em vez de npm
+
+Este starter usa **Bun** (`bun.lock`). Os checks nativos de npm do pacote estão desligados em `config/checkpoint.php`; no lugar deles rodam:
+
+| Check | Classe |
+|-------|--------|
+| Bun CVE Audit | `App\Checkpoint\Checks\BunAuditCheck` |
+| Bun Supply Chain | `App\Checkpoint\Checks\BunSupplyChainCheck` |
+
+#### Adicionar um check customizado
+
+1. Crie uma classe em `app/Checkpoint/Checks/` estendendo `Checkpoint\Checks\AbstractCheck` (constructor `(string $basePath)`).
+2. Ative em `config/checkpoint.php` → `checks`:
+
+```php
+App\Checkpoint\Checks\MeuCheck::class => true,
+```
+
+3. Desative checks do pacote com `false` no mesmo array, se necessário.
+
+O comando `checkpoint:scan` do pacote é usado sem alteração. O `Scanner` em `app/Checkpoint/Scanner.php` (namespace `Checkpoint`) substitui o do vendor via autoload do Composer e registra automaticamente classes `App\Checkpoint\Checks\*` habilitadas no config.
+
+> Ao atualizar o pacote `andreapollastri/checkpoint`, compare `app/Checkpoint/Scanner.php` com `vendor/andreapollastri/checkpoint/src/Scanner.php` e aplique mudanças relevantes.
+
+#### Suprimir achados conhecidos
+
+Hashes de findings aparecem na saída do scan (ex.: `[a1b2c3d4e5f6]`). Adicione em `config/checkpoint.php` → `suppressed` para ignorar falsos positivos aceitos.
+
+#### Configuração
+
+- `config/checkpoint.php` — checks ligados/desligados, whitelist de autoload suspeito, supressões
+- `vendor/bin/sail artisan vendor:publish --tag=checkpoint-config` — republicar config do pacote (cuidado ao sobrescrever customizações)
+
 ### Laravel PAO (saída otimizada para Agent)
 
 O projeto inclui **[Laravel PAO](https://github.com/laravel/pao)** (`laravel/pao` em `require-dev`). O PAO (*PHP Agent Output*) detecta quando Pest, PHPUnit, Paratest, PHPStan ou Rector rodam em um ambiente de **Agent de IA** (Cursor, Claude Code, GitHub Copilot, Gemini CLI, Devin, etc.) e substitui a saída verbosa por **JSON compacto e estável em tamanho**. No terminal humano — ou no CI, onde não há variáveis de Agent — a saída colorida e formatada **não muda**.

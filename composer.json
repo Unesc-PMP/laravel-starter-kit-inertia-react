@@ -12,21 +12,22 @@
         "php": "^8.5.0",
         "inertiajs/inertia-laravel": "^3.0.0-beta",
         "laravel/fortify": "^1.37.2",
-        "laravel/framework": "^13.12.0",
+        "laravel/framework": "^13.13.0",
         "laravel/wayfinder": "^0.1.20",
         "nunomaduro/essentials": "^1.2.0",
         "opcodesio/log-viewer": "^3.24"
     },
     "require-dev": {
-        "clcbws/laravel-agents-debug": "^3.1",
-        "driftingly/rector-laravel": "^2.4.0",
+        "andreapollastri/checkpoint": "^1.0.10",
+        "clcbws/laravel-agents-debug": "^3.1.1",
+        "driftingly/rector-laravel": "^2.5.0",
         "fakerphp/faker": "^1.24.1",
         "fruitcake/laravel-debugbar": "^4.2.8",
         "laradumps/laradumps": "^5.3",
         "larastan/larastan": "^3.10.0",
         "laravel/boost": "^2.4.8",
         "laravel/pail": "^1.2.7",
-        "laravel/pao": "^1.0.6",
+        "laravel/pao": "^1.1.0",
         "laravel/pint": "^1.29.1",
         "laravel/sail": "^1.61",
         "laravel/tinker": "^3.0.2",
@@ -44,12 +45,21 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "classmap": [
+            "app/Checkpoint/Scanner.php"
+        ],
+        "exclude-from-classmap": [
+            "vendor/andreapollastri/checkpoint/src/Scanner.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
-        }
+        },
+        "classmap": [
+            "tests/Stubs/App/Checkpoint/Checks/FakeNotCheck.php"
+        ]
     },
     "scripts": {
         "setup": [
@@ -71,7 +81,8 @@
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan clear",
-            "@update:requirements"
+            "@update:requirements",
+            "@php artisan checkpoint:scan"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
@@ -106,6 +117,9 @@
             "@test:unit",
             "@test:lint",
             "@test:types"
+        ],
+        "post-install-cmd": [
+            "@php artisan checkpoint:scan"
         ]
     },
     "extra": {
