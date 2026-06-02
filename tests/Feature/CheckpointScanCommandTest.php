@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Checkpoint\Checks\BunAuditCheck;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Process;
 
@@ -28,7 +29,7 @@ it('skips custom checks disabled in config', function (): void {
     config([
         'checkpoint.checks' => array_merge(
             config('checkpoint.checks'),
-            [App\Checkpoint\Checks\BunAuditCheck::class => false],
+            [BunAuditCheck::class => false],
         ),
     ]);
 
