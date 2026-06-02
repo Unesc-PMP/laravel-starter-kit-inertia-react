@@ -13,8 +13,16 @@ if echo "$cmd" | grep -qE '(^|[[:space:];&|])(git[[:space:]]+(add|commit|status|
   exit 0
 fi
 
-# bloqueia php/composer/bun/npm/pest/phpunit/artisan diretos no host
+# bloqueia php/composer/bun/npm/pest/phpunit/artisan e binários Laravel direto no host
 if echo "$cmd" | grep -qE '(^|[[:space:];&|])(php|composer|bun|npm|pest|phpunit|artisan)([[:space:]]|$)'; then
+  blocked=1
+elif echo "$cmd" | grep -qE '(^|[[:space:];&|])(\./)?vendor/bin/(pint|rector|phpstan|pest|phpunit)([[:space:]]|$)'; then
+  blocked=1
+elif echo "$cmd" | grep -qE '(^|[[:space:];&|])(\./)?bin/(pint|rector|phpstan)([[:space:]]|$)'; then
+  blocked=1
+fi
+
+if [[ "${blocked:-0}" -eq 1 ]]; then
   cat >&2 <<EOF
 Bloqueado: este projeto roda dentro do Sail.
 
@@ -23,6 +31,7 @@ Bloqueado: este projeto roda dentro do Sail.
   Use vendor/bin/sail. Exemplos:
     vendor/bin/sail artisan ...
     vendor/bin/sail composer ...
+    vendor/bin/sail bin pint --dirty
     vendor/bin/sail bun run dev
     vendor/bin/sail artisan test
 EOF
