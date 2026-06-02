@@ -4,7 +4,32 @@ declare(strict_types=1);
 
 use App\Checkpoint\Checks\BunAuditCheck;
 use App\Checkpoint\Checks\BunSupplyChainCheck;
-use Checkpoint\Checks;
+use Checkpoint\Checks\CommandInjectionCheck;
+use Checkpoint\Checks\ComposerAuditCheck;
+use Checkpoint\Checks\CorsConfigCheck;
+use Checkpoint\Checks\CsrfCheck;
+use Checkpoint\Checks\DebugFunctionsCheck;
+use Checkpoint\Checks\EnvironmentCheck;
+use Checkpoint\Checks\EolVersionCheck;
+use Checkpoint\Checks\FilePermissionsCheck;
+use Checkpoint\Checks\GitIgnoreCheck;
+use Checkpoint\Checks\HardcodedSecretsCheck;
+use Checkpoint\Checks\InsecureDeserializationCheck;
+use Checkpoint\Checks\InsecureRngCheck;
+use Checkpoint\Checks\MassAssignmentCheck;
+use Checkpoint\Checks\NpmAuditCheck;
+use Checkpoint\Checks\OpenRedirectCheck;
+use Checkpoint\Checks\PackageFreshnessCheck;
+use Checkpoint\Checks\PathTraversalCheck;
+use Checkpoint\Checks\SensitiveExposureCheck;
+use Checkpoint\Checks\SessionSecurityCheck;
+use Checkpoint\Checks\SqlInjectionCheck;
+use Checkpoint\Checks\SsrfCheck;
+use Checkpoint\Checks\SupplyChainToolingCheck;
+use Checkpoint\Checks\SuspiciousVendorAutoloadCheck;
+use Checkpoint\Checks\TlsVerificationCheck;
+use Checkpoint\Checks\WeakCryptographyCheck;
+use Checkpoint\Checks\XssCheck;
 
 return [
 
@@ -26,34 +51,34 @@ return [
     */
 
     'checks' => [
-        Checks\ComposerAuditCheck::class => true,
-        Checks\NpmAuditCheck::class => false,
-        Checks\EnvironmentCheck::class => true,
-        Checks\GitIgnoreCheck::class => true,
-        Checks\FilePermissionsCheck::class => true,
-        Checks\HardcodedSecretsCheck::class => true,
-        Checks\SqlInjectionCheck::class => true,
-        Checks\MassAssignmentCheck::class => true,
-        Checks\XssCheck::class => true,
-        Checks\CsrfCheck::class => true,
-        Checks\OpenRedirectCheck::class => true,
-        Checks\CommandInjectionCheck::class => true,
-        Checks\InsecureDeserializationCheck::class => true,
-        Checks\DebugFunctionsCheck::class => true,
-        Checks\SensitiveExposureCheck::class => true,
-        Checks\SsrfCheck::class => true,
-        Checks\TlsVerificationCheck::class => true,
-        Checks\CorsConfigCheck::class => true,
-        Checks\PackageFreshnessCheck::class => true,
-        Checks\SuspiciousVendorAutoloadCheck::class => true,
-        Checks\SupplyChainToolingCheck::class => false,
+        ComposerAuditCheck::class => true,
+        NpmAuditCheck::class => false,
+        EnvironmentCheck::class => true,
+        GitIgnoreCheck::class => true,
+        FilePermissionsCheck::class => true,
+        HardcodedSecretsCheck::class => true,
+        SqlInjectionCheck::class => true,
+        MassAssignmentCheck::class => true,
+        XssCheck::class => true,
+        CsrfCheck::class => true,
+        OpenRedirectCheck::class => true,
+        CommandInjectionCheck::class => true,
+        InsecureDeserializationCheck::class => true,
+        DebugFunctionsCheck::class => true,
+        SensitiveExposureCheck::class => true,
+        SsrfCheck::class => true,
+        TlsVerificationCheck::class => true,
+        CorsConfigCheck::class => true,
+        PackageFreshnessCheck::class => true,
+        SuspiciousVendorAutoloadCheck::class => true,
+        SupplyChainToolingCheck::class => false,
         BunAuditCheck::class => true,
         BunSupplyChainCheck::class => true,
-        Checks\PathTraversalCheck::class => true,
-        Checks\WeakCryptographyCheck::class => true,
-        Checks\InsecureRngCheck::class => true,
-        Checks\SessionSecurityCheck::class => true,
-        Checks\EolVersionCheck::class => true,
+        PathTraversalCheck::class => true,
+        WeakCryptographyCheck::class => true,
+        InsecureRngCheck::class => true,
+        SessionSecurityCheck::class => true,
+        EolVersionCheck::class => true,
     ],
 
     /*

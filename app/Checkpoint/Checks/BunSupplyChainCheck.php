@@ -37,8 +37,8 @@ final class BunSupplyChainCheck extends AbstractCheck
         } else {
             $version = $this->resolveBunVersion($bunPath);
             $details[] = $version !== null
-                ? "bun {$version} available at {$bunPath}"
-                : "bun available at {$bunPath}";
+                ? sprintf('bun %s available at %s', $version, $bunPath)
+                : 'bun available at '.$bunPath;
         }
 
         if (! file_exists($this->basePath.'/bun.lock')) {

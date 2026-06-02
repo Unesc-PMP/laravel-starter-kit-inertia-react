@@ -48,30 +48,34 @@ final class BunAuditCheck extends AbstractCheck
             return CheckResult::warn('`bun audit --json` returned invalid JSON — skipping Bun audit.');
         }
 
-        if ($decoded === []) {
+        /** @var array<string, mixed> $auditResults */
+        $auditResults = $decoded;
+
+        if ($auditResults === []) {
             return CheckResult::pass('No known CVEs in Bun dependencies.');
         }
 
-        [$critical, $high, $details] = $this->parseVulnerabilities($decoded);
+        [$critical, $high, $details] = $this->parseVulnerabilities($auditResults);
 
         if ($critical > 0) {
-            return CheckResult::fail("{$critical} critical vulnerability/ies in Bun dependencies.", $details);
+            return CheckResult::fail($critical.' critical vulnerability/ies in Bun dependencies.', $details);
         }
 
         if ($high > 0) {
-            return CheckResult::warn("{$high} high-severity vulnerability/ies in Bun dependencies.", $details);
+            return CheckResult::warn($high.' high-severity vulnerability/ies in Bun dependencies.', $details);
         }
 
         $total = count($details);
 
         if ($total > 0) {
-            return CheckResult::warn("{$total} low/medium vulnerability/ies in Bun dependencies (run `bun audit` for details).", $details);
+            return CheckResult::warn($total.' low/medium vulnerability/ies in Bun dependencies (run `bun audit` for details).', $details);
         }
 
         return CheckResult::pass('No known CVEs in Bun dependencies.');
     }
 
     /**
+     * @param  array<string, mixed>  $decoded
      * @return array{0: int, 1: int, 2: list<string>}
      */
     private function parseVulnerabilities(array $decoded): array
@@ -91,7 +95,8 @@ final class BunAuditCheck extends AbstractCheck
                 continue;
             }
 
-            $severity = mb_strtolower((string) ($vuln['severity'] ?? 'unknown'));
+            $severityValue = $vuln['severity'] ?? 'unknown';
+            $severity = mb_strtolower(is_string($severityValue) ? $severityValue : 'unknown');
 
             if ($severity === 'critical') {
                 $critical++;
@@ -105,8 +110,10 @@ final class BunAuditCheck extends AbstractCheck
                 continue;
             }
 
-            $title = (string) ($vuln['title'] ?? $vuln['name'] ?? $name);
-            $details[] = "[{$severity}] {$name}: {$title}";
+            $titleValue = $vuln['title'] ?? $vuln['name'] ?? $name;
+            $packageName = is_string($name) ? $name : (string) $name;
+            $title = is_string($titleValue) ? $titleValue : $packageName;
+            $details[] = sprintf('[%s] %s: %s', $severity, $packageName, $title);
         }
 
         return [$critical, $high, $details];
