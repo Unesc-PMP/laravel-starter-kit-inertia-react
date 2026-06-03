@@ -119,9 +119,7 @@
             "@test:lint",
             "@test:types"
         ],
-        "post-install-cmd": [
-            "@php artisan checkpoint:scan"
-        ]
+        "post-install-cmd": []
     },
     "extra": {
         "laravel": {

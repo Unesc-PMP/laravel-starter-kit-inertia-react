@@ -1,21 +1,3 @@
-- Versão Inertia & React (este projeto): **[github.com/nunomaduro/laravel-starter-kit-inertia-react](https://github.com/nunomaduro/laravel-starter-kit-inertia-react)**
-- Versão Blade: **[github.com/nunomaduro/laravel-starter-kit](https://github.com/nunomaduro/laravel-starter-kit)**
-- Versão Inertia & Vue: **[github.com/nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue)**
-
-<p align="center">
-    <a href="https://youtu.be/VhzP0XWGTC4" target="_blank">
-        <img src="https://github.com/nunomaduro/laravel-starter-kit/blob/main/art/banner.png" alt="Visão geral do Laravel Starter Kit" style="width:70%;">
-    </a>
-</p>
-
-<p>
-    <a href="https://github.com/nunomaduro/laravel-starter-kit-inertia-react/actions"><img src="https://github.com/nunomaduro/laravel-starter-kit-inertia-react/actions/workflows/tests.yml/badge.svg" alt="Status do build"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/dt/nunomaduro/laravel-starter-kit-inertia-react" alt="Total de downloads"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/v/nunomaduro/laravel-starter-kit-inertia-react" alt="Última versão estável"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit-inertia-react"><img src="https://img.shields.io/packagist/l/nunomaduro/laravel-starter-kit-inertia-react" alt="Licença"></a>
-    <a href="https://youtube.com/@nunomaduro?sub_confirmation=1"><img alt="Inscritos no canal do YouTube" src="https://img.shields.io/youtube/channel/subscribers/UCO_hYZF2gb_CyG5sA7ArlGg?style=flat&label=youtube&color=brightgreen"></a>
-</p>
-
 **Laravel Starter Kit (Inertia & React)** é um esqueleto [Laravel](https://laravel.com) ultra-rigoroso e type-safe, pensado para quem não abre mão de qualidade de código. Este starter kit opinativo impõe padrões de desenvolvimento exigentes por meio de ferramentas bem configuradas e decisões de arquitetura que priorizam segurança de tipos, imutabilidade e falha rápida.
 
 ## Por que este starter kit?
@@ -46,23 +28,24 @@ No WSL2 (Ubuntu): instale o [Docker Desktop](https://www.docker.com/products/doc
 
 ```bash
 git clone <url-do-repositorio>
-cd laravel-starter-kit-inertia-react
+cd <project>
 
-# Dependências PHP (sem Composer no host)
+
 docker run --rm \
+  -u "$(id -u):$(id -g)" \
   -v "$(pwd):/app" -w /app \
   composer:latest \
   composer install --ignore-platform-req=ext-sockets
 
 cp .env.example .env
-echo "WWWGROUP=$(id -g)" >> .env
-echo "WWWUSER=$(id -u)" >> .env
+sed -i "s/^WWWGROUP=.*/WWWGROUP=$(id -g)/" .env
+sed -i "s/^WWWUSER=.*/WWWUSER=$(id -u)/" .env
 
 ./vendor/bin/sail build
 ./vendor/bin/sail up -d
 
-./vendor/bin/sail composer setup
 ./vendor/bin/sail bunx playwright install
+./vendor/bin/sail composer setup
 ```
 
 O script `composer setup` gera a `APP_KEY`, roda as migrations, instala dependências Bun e faz o build do frontend.

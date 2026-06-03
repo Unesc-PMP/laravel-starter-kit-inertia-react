@@ -59,6 +59,9 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
+      - name: Security scan (Checkpoint)
+        run: composer artisan checkpoint:scan
+
       - name: Install Bun Dependencies
         run: bun install
 
