@@ -121,6 +121,7 @@ Pacotes para inspecionar requests, queries, logs e exceções em desenvolvimento
 | Agent Debugger | `clcbws/laravel-agents-debug` | http://localhost/_agent_debug/dashboard |
 | LaraDumps | `laradumps/laradumps` | app desktop (porta 9191) |
 | Pail | `laravel/pail` | terminal (`sail artisan pail`) |
+| Laravel Brain | `laramint/laravel-brain` | http://localhost/_laravel-brain (após `brain:scan`) |
 
 #### Log Viewer
 
@@ -181,6 +182,39 @@ sail artisan pail --filter="error"
 ```
 
 Já incluso no script `composer dev` (roda em paralelo com servidor e Vite).
+
+#### Laravel Brain
+
+O **[Laravel Brain](https://github.com/laramint/laravel-brain)** analisa o codebase e renderiza um grafo interativo do ciclo de vida das requests: rotas, middleware, controllers, actions, services, models, jobs, events, comandos Artisan e mais. Útil para onboarding, revisão de arquitetura e exportar contexto para assistentes de IA.
+
+Pacote em `require-dev` — só está presente com `composer install` (sem `--no-dev`). As rotas `/_laravel-brain` são registradas apenas com `APP_ENV=local`.
+
+**Primeiro scan** (com o Sail rodando):
+
+```bash
+vendor/bin/sail artisan brain:scan
+```
+
+A saída do grafo vai para `storage/app/laravel-brain/` (driver `file`, padrão). Depois abra **http://localhost/_laravel-brain**.
+
+**Comandos úteis:**
+
+```bash
+vendor/bin/sail artisan brain:scan --watch              # re-scan ao salvar arquivos .php
+vendor/bin/sail artisan brain:scan --auto-discover      # rotas do router live (Filament, Sanctum, etc.)
+vendor/bin/sail artisan brain:export-context            # contexto Markdown/JSON para LLMs
+vendor/bin/sail artisan brain:export-context --route="GET /dashboard"
+vendor/bin/sail artisan brain:generate-rules            # gera CLAUDE.md, .cursor/rules, AGENTS.md, etc.
+vendor/bin/sail artisan brain:generate-rules --target=cursor --dry-run
+```
+
+No viewer: clique em um nó para ver source, flowchart, diagrama de sequência (rotas) e copiar contexto de IA (botão 🤖). Stress test de rotas usa o pacote `laramint/laravel-stress` (dependência automática).
+
+**Docker / Sail:** o stress test roda **dentro** do container. Use **Base URL** `http://localhost` (porta 80 interna do nginx), não a porta mapeada no host.
+
+Variáveis opcionais (`.env`): `LARAVEL_BRAIN_AUTO_DISCOVER_ROUTES`, `LARAVEL_BRAIN_DRIVER` (`file` ou `database`), `LARAVEL_BRAIN_DRIVER=database` quando `storage/` não for compartilhado entre web e CLI.
+
+Documentação completa: [github.com/laramint/laravel-brain](https://github.com/laramint/laravel-brain).
 
 ### Qualidade de código
 
