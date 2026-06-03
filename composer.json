@@ -24,6 +24,7 @@
         "fakerphp/faker": "^1.24.1",
         "fruitcake/laravel-debugbar": "^4.2.8",
         "laradumps/laradumps": "^5.3",
+        "laramint/laravel-brain": ">=2.3",
         "larastan/larastan": "^3.10.0",
         "laravel/boost": "^2.4.8",
         "laravel/pail": "^1.2.7",
