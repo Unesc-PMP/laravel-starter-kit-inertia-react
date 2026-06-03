@@ -60,7 +60,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Security scan (Checkpoint)
-        run: composer artisan checkpoint:scan
+        run: php artisan checkpoint:scan
 
       - name: Install Bun Dependencies
         run: bun install
