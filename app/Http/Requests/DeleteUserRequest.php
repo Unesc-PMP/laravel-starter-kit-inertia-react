@@ -9,12 +9,10 @@ use Illuminate\Foundation\Http\FormRequest;
 final class DeleteUserRequest extends FormRequest
 {
     /**
-     * @return array<string, array<int, string>>
+     * @return array{}
      */
     public function rules(): array
     {
-        return [
-            'user' => ['exists:users'],
-        ];
+        return [];
     }
 }

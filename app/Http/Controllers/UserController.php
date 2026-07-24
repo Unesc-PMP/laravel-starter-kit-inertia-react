@@ -12,12 +12,14 @@ use App\Http\Requests\DeleteUserRequest;
 use App\Http\Requests\UpdateUserNameRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
 final readonly class UserController
 {
+    #[Authorize('viewAny', User::class)]
     public function index(): Response
     {
         return Inertia::render('user/index', [
@@ -50,6 +52,7 @@ final readonly class UserController
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
+    #[Authorize('update', 'user')]
     public function update(UpdateUserNameRequest $request, User $user, UpdateUser $action): RedirectResponse
     {
         $action->handle($user, $request->validated());
@@ -57,6 +60,7 @@ final readonly class UserController
         return Inertia::flash('success', 'User updated successfully')->back();
     }
 
+    #[Authorize('delete', 'user')]
     public function destroy(DeleteUserRequest $request, User $user, DeleteUser $action): RedirectResponse
     {
         $action->handle($user);
