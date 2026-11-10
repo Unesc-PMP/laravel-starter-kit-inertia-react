@@ -268,7 +268,7 @@ export default function UsersIndex({ users }: UserPageProps) {
                                                                     disabled
                                                                 >
                                                                     <VenetianMask className="mr-2 h-4 w-4" />
-                                                                    Impersonar
+                                                                    Personificar
                                                                 </Button>
                                                             ) : (
                                                                 <Button
@@ -283,7 +283,7 @@ export default function UsersIndex({ users }: UserPageProps) {
                                                                         as="button"
                                                                     >
                                                                         <VenetianMask className="mr-2 h-4 w-4" />
-                                                                        Impersonar
+                                                                        Personificar
                                                                     </Link>
                                                                 </Button>
                                                             ))}
